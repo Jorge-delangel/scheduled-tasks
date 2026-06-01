@@ -11,28 +11,54 @@ import pandas
 import random
 import smtplib
 import os
+import requests
 
 # import os and use it to get the Github repository secrets
 MY_EMAIL = os.environ.get("MY_EMAIL")
 MY_PASSWORD = os.environ.get("MY_PASSWORD")
+MY_LAT = 53.288612 # Your latitude
+MY_LONG = -6.164032 # Your longitude
 
-today = datetime.now()
-today_tuple = (today.month, today.day)
+response = requests.get(url="http://api.open-notify.org/iss-now.json")
+response.raise_for_status()
+data = response.json()
 
-data = pandas.read_csv("birthdays.csv")
-birthdays_dict = {(data_row["month"], data_row["day"]): data_row for (index, data_row) in data.iterrows()}
-if today_tuple in birthdays_dict:
-    birthday_person = birthdays_dict[today_tuple]
-    file_path = f"letter_templates/letter_{random.randint(1, 3)}.txt"
-    with open(file_path) as letter_file:
-        contents = letter_file.read()
-        custom_letter = contents.replace("[NAME]", birthday_person["name"])
+iss_latitude = float(data["iss_position"]["latitude"])
+iss_longitude = float(data["iss_position"]["longitude"])
 
-    with smtplib.SMTP("smtp.gmail.com") as connection:
-        connection.starttls()
-        connection.login(MY_EMAIL, MY_PASSWORD)
-        connection.sendmail(
-            from_addr=MY_EMAIL,
-            to_addrs=birthday_person["email"],
-            msg=f"Subject:Happy Birthday{birthday_person["name"]}\n\n{custom_letter}"
-        )
+#Your position is within +5 or -5 degrees of the ISS position.
+def is_iss_close():
+    if MY_LAT - 5 < iss_latitude < MY_LAT + 5:
+        if MY_LONG -5 < iss_longitude < MY_LONG + 5:
+            return True
+        return None
+    else:
+        return False
+
+
+parameters = {
+    "lat": MY_LAT,
+    "lng": MY_LONG,
+    "formatted": 0,
+}
+
+response = requests.get("https://api.sunrise-sunset.org/json", params=parameters)
+response.raise_for_status()
+data = response.json()
+sunrise = int(data["results"]["sunrise"].split("T")[1].split(":")[0])
+sunset = int(data["results"]["sunset"].split("T")[1].split(":")[0])
+
+time_now = datetime.now()
+
+if sunrise > time_now.hour > sunset:
+    if is_iss_close:
+        # Then send me an email to tell me to look up.
+        with smtplib.SMTP("smtp.gmail.com") as connection:
+            connection.starttls()
+            connection.login(MY_EMAIL, MY_PASSWORD)
+            connection.sendmail(
+                from_addr=MY_EMAIL,
+                to_addrs=MY_EMAIL,
+                msg=f"Subject:Space station alert\n\nLook up the ISS in sight!\n"
+                    f"ISS Latitude: {iss_latitude}\nISS Longitude: {iss_longitude}"
+            )
