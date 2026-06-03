@@ -12,53 +12,51 @@ import random
 import smtplib
 import os
 import requests
+from twilio.rest import Client
 
 # import os and use it to get the Github repository secrets
 MY_EMAIL = os.environ.get("MY_EMAIL")
 MY_PASSWORD = os.environ.get("MY_PASSWORD")
-MY_LAT = 53.288612 # Your latitude
-MY_LONG = -6.164032 # Your longitude
+#Open Weather credentials
+OWM_Endpoint = "https://api.openweathermap.org/data/2.5/forecast"
+api_key = os.environ.get(OWN_API_KEY)
 
-response = requests.get(url="http://api.open-notify.org/iss-now.json")
-response.raise_for_status()
-data = response.json()
 
-iss_latitude = float(data["iss_position"]["latitude"])
-iss_longitude = float(data["iss_position"]["longitude"])
-
-#Your position is within +5 or -5 degrees of the ISS position.
-def is_iss_close():
-    if MY_LAT - 5 < iss_latitude < MY_LAT + 5:
-        if MY_LONG -5 < iss_longitude < MY_LONG + 5:
-            return True
-        return None
-    else:
-        return False
+#Twilio credentials
+account_sid = os.environ.get(ASID)
+auth_token = os.environ.get(AUTH_TOKEN)
+my_twilio_num = os.environ.get(TWILIO_PHONE_NUMBER)
 
 
 parameters = {
-    "lat": MY_LAT,
-    "lng": MY_LONG,
-    "formatted": 0,
+    "lat": 53.344101,
+    "lon": -6.267490,
+    "appid": api_key,
+    "cnt": 4
 }
 
-response = requests.get("https://api.sunrise-sunset.org/json", params=parameters)
+response = requests.get(OWM_Endpoint, params=parameters)
 response.raise_for_status()
-data = response.json()
-sunrise = int(data["results"]["sunrise"].split("T")[1].split(":")[0])
-sunset = int(data["results"]["sunset"].split("T")[1].split(":")[0])
+weather_data = response.json()
 
-time_now = datetime.now()
+will_rain = False
+for i in range(4):
+    weather_id = weather_data["list"][i]["weather"][0]["id"]
+    if weather_id < 700:
+        will_rain = True
 
-if sunrise > time_now.hour > sunset:
-    if is_iss_close:
-        # Then send me an email to tell me to look up.
-        with smtplib.SMTP("smtp.gmail.com") as connection:
-            connection.starttls()
-            connection.login(MY_EMAIL, MY_PASSWORD)
-            connection.sendmail(
-                from_addr=MY_EMAIL,
-                to_addrs=MY_EMAIL,
-                msg=f"Subject:Space station alert\n\nLook up the ISS in sight!\n"
-                    f"ISS Latitude: {iss_latitude}\nISS Longitude: {iss_longitude}"
-            )
+if will_rain:
+    with smtplib.SMTP("smtp.gmail.com") as connection:
+    connection.starttls()
+    connection.login(MY_EMAIL, MY_PASSWORD)
+    connection.sendmail(
+        from_addr=MY_EMAIL,
+        to_addrs=MY_EMAIL,
+        msg=f"Subject:eather forecast\n\nBring your umbrella with you" 
+else:
+    connection.starttls()
+    connection.login(MY_EMAIL, MY_PASSWORD)
+    connection.sendmail(
+        from_addr=MY_EMAIL,
+        to_addrs=MY_EMAIL,
+        msg=f"Subject:Weather forecast\n\nIt's a sunny day, Enjoy!"
