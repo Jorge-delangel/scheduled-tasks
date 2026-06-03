@@ -6,27 +6,16 @@
 # See the solution video in the 100 Days of Python Course for explainations.
 
 
-from datetime import datetime
-import pandas
-import random
 import smtplib
 import os
 import requests
-from twilio.rest import Client
 
 # import os and use it to get the Github repository secrets
-MY_EMAIL = os.environ.get("MY_EMAIL")
-MY_PASSWORD = os.environ.get("MY_PASSWORD")
+MY_EMAIL = os.environ.get(MY_EMAIL)
+MY_PASSWORD = os.environ.get(MY_PASSWORD)
 #Open Weather credentials
 OWM_Endpoint = "https://api.openweathermap.org/data/2.5/forecast"
-api_key = os.environ.get(OWN_API_KEY)
-
-
-#Twilio credentials
-account_sid = os.environ.get(ASID)
-auth_token = os.environ.get(AUTH_TOKEN)
-my_twilio_num = os.environ.get(TWILIO_PHONE_NUMBER)
-
+api_key = "b0aeeb3c52450f8cbb21a532c122dfee"
 
 parameters = {
     "lat": 53.344101,
@@ -47,16 +36,10 @@ for i in range(4):
 
 if will_rain:
     with smtplib.SMTP("smtp.gmail.com") as connection:
-    connection.starttls()
-    connection.login(MY_EMAIL, MY_PASSWORD)
-    connection.sendmail(
-        from_addr=MY_EMAIL,
-        to_addrs=MY_EMAIL,
-        msg=f"Subject:eather forecast\n\nBring your umbrella with you" 
-else:
-    connection.starttls()
-    connection.login(MY_EMAIL, MY_PASSWORD)
-    connection.sendmail(
-        from_addr=MY_EMAIL,
-        to_addrs=MY_EMAIL,
-        msg=f"Subject:Weather forecast\n\nIt's a sunny day, Enjoy!"
+        connection.starttls()
+        connection.login(MY_EMAIL, MY_PASSWORD)
+        connection.sendmail(
+            from_addr=MY_EMAIL,
+            to_addrs=MY_EMAIL,
+            msg=f"Subject:Weather forecast\n\nBring your umbrella with you; It's gonna be raining"
+        )
