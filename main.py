@@ -11,8 +11,8 @@ import os
 import requests
 
 # import os and use it to get the Github repository secrets
-MY_EMAIL = os.environ.get(MY_EMAIL)
-MY_PASSWORD = os.environ.get(MY_PASSWORD)
+MY_EMAIL = os.environ.get("MY_EMAIL")
+MY_PASSWORD = os.environ.get("MY_PASSWORD")
 #Open Weather credentials
 OWM_Endpoint = "https://api.openweathermap.org/data/2.5/forecast"
 api_key = "b0aeeb3c52450f8cbb21a532c122dfee"
